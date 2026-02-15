@@ -1,0 +1,129 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #111f40;
+    --secondary: #111827;
+    --accent: #2563EB;
+    --border: #1F2A44;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden; 
+    font-family: "Segoe UI", sans-serif;
+    background: var(--primary);
+    color: var(--text);
+}
+
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.employee-header,
+.employee-footer {
+    flex-shrink: 0;
+    background: var(--secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.employee-header {
+    height: 70px;
+    border-bottom: 1px solid var(--accent);
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.employee-footer {
+    height: 50px;
+    border-top: 1px solid var(--accent);
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.employee-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+}
+
+.scanner-wrapper {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    text-align: center;
+}
+
+.scanner-instructions h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.scanner-instructions p {
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.camera-container {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-placeholder {
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.camera-error {
+    position: absolute;
+    inset: 0;
+    background: #020617;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.hidden {
+    display: none;
+}
+
+.camera-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 600px) {
+    .scanner-wrapper {
+        gap: 18px;
+    }
+
+    .scanner-instructions h2 {
+        font-size: 18px;
+    }
+}

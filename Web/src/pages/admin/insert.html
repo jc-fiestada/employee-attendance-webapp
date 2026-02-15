@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Insert Employee</title>
+    <link rel="stylesheet" href="../../css/admin.css">
+</head>
+<body>
+
+    <div class="page-container">
+        <header class="admin-header">
+            <div class="header-left">
+                <h1 class="admin-title">ADMIN</h1>
+            </div>
+            <div class="header-center">
+                <p class="page-label">Create New Employee</p>
+            </div>
+        </header>
+
+        <div class="main-content-wrapper">
+
+            <aside class="sidebar" id="sidebar">
+                <button class="toggle-btn" id="toggleSidebar">☰</button>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li class="sidebar-item">
+                            <a href="./main.html">
+                                <span class="icon">🏠</span>
+                                <span class="text">Home</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a href="./insert.html">
+                                <span class="icon">➕</span>
+                                <span class="text">Insert</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <div class="main-area">
+                <main class="admin-main">
+                    <section class="employee-layout">
+
+                        <form id="employeeForm" class="employee-grid" enctype="multipart/form-data">
+
+                            <div class="card classification">
+                                <h3>Classification</h3>
+
+                                <label>Gender</label>
+                                <select name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                </select>
+
+                                <label>Department</label>
+                                <select name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option>IT</option>
+                                    <option>Finance</option>
+                                    <option>Marketing</option>
+                                    <option>Customer Service</option>
+                                    <option>Department Management</option>
+                                </select>
+                            </div>
+
+                            <div class="card photo-box">
+                                <h3>Employee Photo</h3>
+
+                                <div class="photo-preview" id="photoPreview">
+                                    <span>No Photo</span>
+                                </div>
+
+                                <input type="file" id="photoInput" name="photo" accept="image/*" hidden />
+
+                                <button type="button" class="btn-secondary" id="uploadBtn">
+                                    Add Photo
+                                </button>
+                            </div>
+
+                            <div class="card details">
+                                <h3>Employee Details</h3>
+
+                                <label>Full Name</label>
+                                <input type="text" name="name" required />
+
+                                <label>Gmail Address</label>
+                                <input type="email" name="gmail" required />
+                            </div>
+
+                            <div class="submit-row">
+                                <button type="submit" class="btn-primary">Create Employee</button>
+                            </div>
+
+                        </form>
+
+                    </section>
+
+                </main>
+            </div>
+
+        </div>
+
+        <footer class="admin-footer">
+            <p>Employee Monitoring System</p>
+        </footer>
+
+    </div>
+
+    <script type="module" src="../../scripts/shared/sidebar.ts"></script>
+    <script type="module" src="../../scripts/insertPage.ts"></script>
+</body>
+</html>

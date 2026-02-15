@@ -1,0 +1,77 @@
+:root {
+    --primary: #111f40;
+    --secondary: #111827;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --border: #1F2A44;
+    --text: #f1f5f9;
+    --muted: #f6f8fb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Segoe UI", sans-serif;
+    background-color: var(--primary);
+    color: var(--text);
+}
+
+.unauth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+}
+
+.unauth-card {
+    max-width: 400px;
+    background-color: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.unauth-card h1 {
+    font-size: 60px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.unauth-card h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.unauth-card p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: var(--accent);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-hover);
+}

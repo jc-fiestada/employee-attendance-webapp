@@ -1,0 +1,92 @@
+:root {
+    --primary: #111f40;
+    --secondary: #111827;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --border: #1F2A44;
+    --text: #f1f5f9;
+    --muted: #f6f8fb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Segoe UI", sans-serif;
+    background-color: var(--primary);
+    color: var(--text);
+}
+
+.signin-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.signin-card h2 {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.signin-card p {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    padding: 12px;
+    background-color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    transition: border 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.btn-primary {
+    padding: 12px;
+    background-color: var(--accent);
+    color: var(--text);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-hover);
+}

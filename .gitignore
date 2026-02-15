@@ -1,1 +1,9 @@
 Web/node_modules/
+Web/dist/
+Web/.parcel-cache/
+
+.env
+*.env
+
+Server/bin/
+Server/obj/

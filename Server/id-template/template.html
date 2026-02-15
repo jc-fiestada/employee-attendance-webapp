@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ID Template</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+@page {
+    size: 60mm 92.6mm;
+    margin: 0;
+}
+
+body {
+    background: #e5e5e5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.id-card {
+    width: 60mm;
+    height: 92.6mm;
+    background: white;
+    border: 0.4mm solid #222;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.id-header {
+    background: #1f3a5f;
+    color: white;
+    text-align: center;
+    padding: 4mm 2mm;
+}
+
+.id-header h1 {
+    font-size: 4mm;
+    letter-spacing: 0.5mm;
+}
+
+.id-header p {
+    font-size: 3mm;
+}
+
+.id-photo {
+    height: 30mm;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3mm;
+}
+
+.id-photo img {
+    width: 25mm;
+    height: 25mm;
+    object-fit: cover;
+    border-radius: 2mm;
+    border: 0.5mm solid #444;
+    background: #f0f0f0;
+}
+
+.id-info {
+    text-align: center;
+    padding: 2mm 4mm;
+}
+
+.name {
+    font-size: 4.2mm;
+    font-weight: bold;
+    margin-bottom: 1.5mm;
+}
+
+.department {
+    font-size: 3.3mm;
+    color: #444;
+}
+
+.id-qr {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2mm;
+}
+
+.id-qr img {
+    width: 24mm;
+    height: 24mm;
+    object-fit: contain;
+    border: 0.4mm solid #333;
+    background: #fafafa;
+}
+
+.id-qr p {
+    font-size: 2.8mm;
+    margin-top: 1mm;
+    color: #666;
+}
+
+.id-footer {
+    background: #f4f4f4;
+    text-align: center;
+    padding: 2mm;
+    font-size: 3mm;
+    border-top: 0.3mm solid #ccc;
+}
+
+@media print {
+    body {
+        background: none;
+        height: auto;
+    }
+}
+</style>
+
+</head>
+    <body>
+
+    <div class="id-card">
+
+        <div class="id-header">
+            <h1>COMPANY NAME</h1>
+            <p>Employee Identification</p>
+        </div>
+
+        <div class="id-photo">
+            <img src="default-user.png" alt="User Photo">
+        </div>
+
+        <div class="id-info">
+            <p class="name">Juan Dela Cruz</p>
+            <p class="department">IT Department</p>
+        </div>
+
+        <div class="id-qr">
+            <img src="default-qr.png" alt="QR Code">
+            <p>Scan to Verify</p>
+        </div>
+
+        <div class="id-footer">
+            <p>ID No: 000123</p>
+        </div>
+
+    </div>
+
+    </body>
+</html>
