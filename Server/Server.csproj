@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="dotnetenv" Version="3.1.1" />
+    <PackageReference Include="MysqlConnector" Version="2.5.0" />
+  </ItemGroup>
+
 </Project>
