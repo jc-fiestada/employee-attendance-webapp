@@ -1,6 +1,7 @@
 using MySqlConnector;
 using EmployeeAttendance.Models.Dto;
 using EmployeeAttendance.Models.Entities;
+using BCrypt.Net;
 
 namespace EmployeeAttendance.Services.Database;
 
@@ -10,9 +11,9 @@ public class MysqlDb
     private readonly string _serverConn; // use only to generate db
     private readonly string _dbConn; // use this for db connection
 
-    public MysqlDb(string key)
+    public MysqlDb()
     {
-        string _dbPassword = Environment.GetEnvironmentVariable(key) ?? throw new Exception("ERROR: database key missing");
+        string _dbPassword = Environment.GetEnvironmentVariable("db_password") ?? throw new Exception("ERROR: database key missing");
 
         _serverConn = $"Server=localhost;User=root;Password={_dbPassword}";
         _dbConn = $"Server=localhost;Database=management;User=root;Password={_dbPassword}";
@@ -84,6 +85,23 @@ public class MysqlDb
         await command.ExecuteNonQueryAsync();
     }
 
+    private async Task InsertAdminCredentials()
+    {
+        string username = Environment.GetEnvironmentVariable("admin_username") ?? throw new InvalidOperationException("ERROR: Missing admin username credentials");
+        string password = Environment.GetEnvironmentVariable("admin_pass") ?? throw new InvalidOperationException("ERROR: Missing admin password credentials");
+
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = "INSERT INTO admin VALUES (@username, @password);";
+
+        MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@username", username);
+        command.Parameters.AddWithValue("@password", BCrypt.Net.BCrypt.HashPassword(password).ToString());
+
+        await command.ExecuteNonQueryAsync();
+    }
+
     // put this to an endpoint and use it once
     public async Task InitializeDbAndTable()
     {
@@ -91,6 +109,13 @@ public class MysqlDb
         await EmployeeTableInit();
         await AttendanceTableInit();
         await AdminTableInit();
+    }
+
+
+    // just use once to initiate the admin credentials 
+    public async Task AdminCredentialsInit()
+    {
+        await InsertAdminCredentials();
     }
 
     public async Task<List<Employee>> SelectEmployeeData()
@@ -138,6 +163,33 @@ public class MysqlDb
         command.Parameters.AddWithValue("@code", employee.Code);
 
         await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> IsAdminValid(AdminDto unverifiedAdmin)
+    {
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = "SELECT * FROM admin";
+
+        MySqlCommand command = new MySqlCommand(query, conn);
+        var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+            throw new InvalidOperationException("ERROR: No admin credential has been found");
+        }
+
+        Admin admin = new Admin()
+        {
+            Username = reader.GetString("username"),
+            Password = reader.GetString("password")
+        };
+
+        if (admin.Username != unverifiedAdmin.Username 
+        || !BCrypt.Net.BCrypt.Verify(unverifiedAdmin.Password, admin.Password)) return false;
+
+        return true;
     }
 
     
