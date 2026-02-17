@@ -7,6 +7,8 @@ using System.Text;
 using EmployeeAttendance.ResponseHandler;
 using EmployeeAttendance.Services.Database;
 using EmployeeAttendance.Models.Dto;
+using EmployeeAttendance.Services.Service;
+using System.ComponentModel.DataAnnotations;
 
 
 Env.Load("keys.env");
@@ -29,10 +31,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     }
 );
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireRole("Admin");
+    });
+});
 
 builder.Services.AddScoped<Response>();
 builder.Services.AddScoped<MysqlDb>();
+builder.Services.AddScoped<Tools>();
 
 var app = builder.Build();
 
@@ -49,11 +58,16 @@ app.UseAuthorization();
 
 
 
-
+// tested
 app.MapPost("/admin/signin", async (AdminDto admin, Response serverResponse, MysqlDb db) =>
 {
     return await serverResponse.SignIn(admin, db, keyBytes);
 });
+
+app.MapPost("/authenticate/page-access", () =>
+{
+    return Results.Ok("Welcome Admin");
+}).RequireAuthorization("AdminOnly");
 
 
 app.MapGet("/setup/database", async (Response serverResponse) =>
@@ -61,17 +75,13 @@ app.MapGet("/setup/database", async (Response serverResponse) =>
     await serverResponse.DbAndTableInit();
 });
 
-app.MapPost("/insert/employee", async (HttpClient client) =>
+app.MapPost("/insert/employee", async (Response response, HttpRequest request, MysqlDb db, Tools tool) =>
 {
-    
-});
+    return await response.InsertEmployeeData(request, db, tool);
+}).RequireAuthorization("AdminOnly");
 
-/*
-app.MapGet("/admin-credentials/insert", async (MysqlDb db) =>
-{
-    await db.AdminCredentialsInit();
-}); 
-*/
+
+
 
 
 

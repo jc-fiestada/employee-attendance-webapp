@@ -39,12 +39,15 @@ public class MysqlDb
         string query = @"
             CREATE TABLE IF NOT EXISTS employees (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
                 sex VARCHAR(255) NOT NULL,
                 department VARCHAR(255) NOT NULL,
+                gmail VARCHAR(255) NOT NULL,
                 code VARCHAR(255) NOT NULL,
 
-                CONSTRAINT unique_code UNIQUE(code)
+                CONSTRAINT unique_gmail UNIQUE(gmail),
+                CONSTRAINT unique_code UNIQUE(code),
+                CONSTRAINT unique_name UNIQUE(name)
             )";
 
         MySqlCommand command = new MySqlCommand(query, conn);
@@ -85,6 +88,7 @@ public class MysqlDb
         await command.ExecuteNonQueryAsync();
     }
 
+    // remove this later
     private async Task InsertAdminCredentials()
     {
         string username = Environment.GetEnvironmentVariable("admin_username") ?? throw new InvalidOperationException("ERROR: Missing admin username credentials");
@@ -100,7 +104,7 @@ public class MysqlDb
         command.Parameters.AddWithValue("@password", BCrypt.Net.BCrypt.HashPassword(password).ToString());
 
         await command.ExecuteNonQueryAsync();
-    }
+    } 
 
     // put this to an endpoint and use it once
     public async Task InitializeDbAndTable()
@@ -113,10 +117,14 @@ public class MysqlDb
 
 
     // just use once to initiate the admin credentials 
+
+    // remove this later
     public async Task AdminCredentialsInit()
     {
         await InsertAdminCredentials();
     }
+
+    
 
     public async Task<List<Employee>> SelectEmployeeData()
     {
@@ -152,13 +160,14 @@ public class MysqlDb
         await conn.OpenAsync();
 
         string query = $@"
-            INSERT INTO employees (name, sex, department, code)
-            VALUES (@name, @sex, @department, @code)
+            INSERT INTO employees (name, sex, gmail, department, code)
+            VALUES (@name, @sex, @gmail, @department, @code)
         ";
 
         MySqlCommand command = new MySqlCommand(query, conn);
         command.Parameters.AddWithValue("@name", employee.Name);
         command.Parameters.AddWithValue("@sex", employee.Sex);
+        command.Parameters.AddWithValue("@gmail", employee.Gmail);
         command.Parameters.AddWithValue("@department", employee.Department);
         command.Parameters.AddWithValue("@code", employee.Code);
 

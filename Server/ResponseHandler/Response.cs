@@ -1,13 +1,15 @@
 using EmployeeAttendance.Services.Database;
 using EmployeeAttendance.Models.Dto;
-using EmployeeAttendance.Models.Entities;
+using EmployeeAttendance.Services.Service;
+
+
 using System.Text.Json;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using Sprache;
+using MySqlConnector;
 
 
 
@@ -31,43 +33,74 @@ public class Response
     }
 
     // unfinished
-    public async Task<IResult> InsertEmployeeData(HttpRequest request)
+    public async Task<IResult> InsertEmployeeData(HttpRequest request, MysqlDb db, Tools tool)
     {
         IFormCollection form  = await request.ReadFormAsync();
 
-        if (!form.ContainsKey("employee") || !form.ContainsKey("img"))
+        if (!form.ContainsKey("employee") || form.Files["img"] == null)
         {
-            
+            return Results.BadRequest("Missing dto/s detected");
         }
 
         string rawEmployeeData = form["employee"].ToString();
 
-        EmployeeDto employee = default!;
+        EmployeeDto employee;
         
         try
         {
             employee = JsonSerializer.Deserialize<EmployeeDto>(rawEmployeeData)!;
+            tool.ValidateEmployee(employee);
+        } catch (FormatException ex)
+        {
+            return Results.BadRequest(ex.Message);
+        } catch (ArgumentException ex)
+        {
+            return Results.BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            
+            Console.WriteLine($"ERROR: {ex.Message}");
+            return Results.BadRequest("Model deserialization failed - Data might be corrupted/broken");
         }
 
         IFormFile imgFile = form.Files["img"]!;
 
         if (imgFile is null || imgFile.Length == 0)
         {
-            return Results.BadRequest();
+            return Results.BadRequest("Missing image detected");
         }
 
-        employee.Code = Guid.NewGuid().ToString();
+        bool inserted = false;
 
-        string filename = $"${employee.Code}.jpeg";
-        string filepath = Path.Combine(_resourcesDirPath, filename);
+        // try for five times only to avoid infinite loop
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                employee.Code = Guid.NewGuid().ToString();
+                await db.InsertEmployee(employee);
 
-        using Image image = await Image.LoadAsync(imgFile.OpenReadStream());
+                inserted = true;
+                break;
+            } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_code"))
+            {
+                continue;
+            } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_name"))
+            {
+                return Results.Conflict($"ERROR: Name already exist's in the database");
+            } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_gmail"))
+            {
+                return Results.Conflict($"ERROR: Gmail already exist's in the database");
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return Results.InternalServerError("ERROR: Something went wrong from the database");
+            }
+        }
 
-        await image.SaveAsync(filepath, new JpegEncoder {Quality = 100});
+        if (!inserted) return Results.InternalServerError("ERROR: Server failed to create unique employee code");
+
+        string filepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
 
         return Results.Ok();
     }
