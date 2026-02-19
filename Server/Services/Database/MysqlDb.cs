@@ -27,7 +27,7 @@ public class MysqlDb
 
         string query = @"CREATE DATABASE IF NOT EXISTS management";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlCommand command = new MySqlCommand(query, conn);
         await command.ExecuteNonQueryAsync();
     }
 
@@ -50,7 +50,7 @@ public class MysqlDb
                 CONSTRAINT unique_name UNIQUE(name)
             )";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlCommand command = new MySqlCommand(query, conn);
         await command.ExecuteNonQueryAsync();
     }
 
@@ -68,7 +68,7 @@ public class MysqlDb
                 FOREIGN KEY (fk_code) REFERENCES employees(code)
                 ON DELETE CASCADE
             )";
-        MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlCommand command = new MySqlCommand(query, conn);
         await command.ExecuteNonQueryAsync();
     }
 
@@ -84,8 +84,27 @@ public class MysqlDb
             )
         ";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlCommand command = new MySqlCommand(query, conn);
         await command.ExecuteNonQueryAsync();
+    }
+
+    private async Task<string> SelectEmployeeCode(int userId)
+    {
+        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        await conn.OpenAsync();
+
+        string query = "SELECT code FROM employees WHERE id = @id";
+
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@id", userId);
+
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            throw new Exception("ERROR: User id not found");
+        }
+
+        return reader.GetString("code");
     }
 
     /*
@@ -127,27 +146,29 @@ public class MysqlDb
 
     
 
-    public async Task<List<Employee>> SelectEmployeeData()
+    public async Task<List<Employee>> SelectAllEmployee()
     {
         using MySqlConnection conn = new MySqlConnection();
         await conn.OpenAsync();
 
         List<Employee> employees = new List<Employee>();
 
-        string query = @"SELECT * FROM employees";
+        string query = "SELECT * FROM employees";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
-        var reader = await command.ExecuteReaderAsync();
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
 
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
-            Employee employee = new Employee();
-
-            employee.Id = reader.GetInt32("id");
-            employee.Name = reader.GetString("name");
-            employee.Sex = reader.GetString("sex");
-            employee.Department = reader.GetString("department");
-            employee.Code = reader.GetString("code");
+            Employee employee = new Employee()
+            {
+                Id = reader.GetInt32("id"),
+                Name = reader.GetString("name"),
+                Sex = reader.GetString("sex"),
+                Department = reader.GetString("department"),
+                Code = reader.GetString("code"),
+                Gmail = reader.GetString("gmail")
+            };
 
             employees.Add(employee);
         }
@@ -165,7 +186,7 @@ public class MysqlDb
             VALUES (@name, @sex, @gmail, @department, @code)
         ";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlCommand command = new MySqlCommand(query, conn);
         command.Parameters.AddWithValue("@name", employee.Name);
         command.Parameters.AddWithValue("@sex", employee.Sex);
         command.Parameters.AddWithValue("@gmail", employee.Gmail);
@@ -182,8 +203,8 @@ public class MysqlDb
 
         string query = "SELECT * FROM admin";
 
-        MySqlCommand command = new MySqlCommand(query, conn);
-        var reader = await command.ExecuteReaderAsync();
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
         {
@@ -200,6 +221,49 @@ public class MysqlDb
         || !BCrypt.Net.BCrypt.Verify(unverifiedAdmin.Password, admin.Password)) return false;
 
         return true;
+    }
+
+
+    public async Task UpdateEmployee(string column, object value, int employeeId)
+    {
+        string[] columns = ["name", "sex", "department"];
+
+        if (!columns.Contains(column))
+        {
+            throw new Exception("Invalid column value");
+        }
+
+        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        await conn.OpenAsync();
+
+        string query = $@"
+            UPDATE employees
+            SET {column} = @value
+            WHERE id = @id
+        ";
+            
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@value", value);
+        command.Parameters.AddWithValue("@id", employeeId);
+
+        await command.ExecuteNonQueryAsync();
+    
+    }
+    
+
+    public async Task<string> DeleteEmployee(int employeeId)
+    {
+        string employeeCode = await SelectEmployeeCode(employeeId);
+        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        await conn.OpenAsync();
+        string query = "DELETE FROM employees WHERE id = @id";
+
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@id", employeeId);
+
+        await command.ExecuteNonQueryAsync();
+
+        return employeeCode;
     }
 
     

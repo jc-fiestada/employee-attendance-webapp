@@ -84,33 +84,21 @@ app.MapPost("/insert/employee", async (Response response, HttpRequest request, M
     return await response.InsertEmployeeData(request, db, tool);
 }).RequireAuthorization("AdminOnly");
 
-app.MapGet("/getPdf", async (Tools tool) =>
+
+app.MapPost("/delete/employee", async (EmployeeId employee, Response response, MysqlDb db) =>
 {
-    Byte[] qr = tool.GenerateQrCode("6f38b109-f9b9-404e-97b7-193fd43e020f");
-    EmployeeDto employee = new EmployeeDto()
-    {
-        Name ="JC",
-        Sex = "Male",
-        Code = "6f38b109-f9b9-404e-97b7-193fd43e020f",
-        Gmail = "johnchristianfiestada69@gmail.com",
-        Department = "IT"
-    };
+    return await response.DeleteEmployee(employee.id, db);
+});
 
-    Byte[] pdf = await tool.CreateEmployeeId(Path.Combine("id-template", "template.html"), 
+app.MapPost("/update/employee", async (EmployeeId id) =>
+{
     
-    Path.Combine("..", "Resources", "6f38b109-f9b9-404e-97b7-193fd43e020f.jpeg"), 
-    employee, qr
-    );
-
-    await tool.SendIdViaGmail(pdf, employee.Name, employee.Gmail);
-
-    return Results.File(pdf, contentType: "application/pdf");
-
 });
 
 
 
 
 
-
 app.Run();
+
+record EmployeeId (int id);

@@ -161,6 +161,23 @@ public class Response
         return Results.Json(new {token = jwt}, statusCode: 200);
     }
 
+    public async Task<IResult> DeleteEmployee(int employeeId, MysqlDb db)
+    {
+        try
+        {
+            string code = await db.DeleteEmployee(employeeId);
+            string imgFilepath = Path.GetFullPath(Path.Combine("..", "Resources", $"{code}.jpeg"));
+            File.Delete(imgFilepath);
+        } catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return Results.InternalServerError("Something went wrong - Internal server error");
+        }
+
+
+        return Results.Ok();
+    }
+
 }
 
 
