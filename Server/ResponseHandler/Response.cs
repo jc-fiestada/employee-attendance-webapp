@@ -35,20 +35,28 @@ public class Response
     // unfinished
     public async Task<IResult> InsertEmployeeData(HttpRequest request, MysqlDb db, Tools tool)
     {
+
         IFormCollection form  = await request.ReadFormAsync();
+
+        // checks for keys if exists
 
         if (!form.ContainsKey("employee") || form.Files["img"] == null)
         {
             return Results.BadRequest("Missing dto/s detected");
         }
 
-        string rawEmployeeData = form["employee"].ToString();
-
+        string rawEmployeeData = form["employee"].ToString(); // raw data
         EmployeeDto employee;
         
         try
         {
-            employee = JsonSerializer.Deserialize<EmployeeDto>(rawEmployeeData)!;
+            // deserialize in a case insensitive way then validates it
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            employee = JsonSerializer.Deserialize<EmployeeDto>(rawEmployeeData, options) ?? throw new Exception();
             tool.ValidateEmployee(employee);
         } catch (FormatException ex)
         {
@@ -63,7 +71,9 @@ public class Response
             return Results.BadRequest("Model deserialization failed - Data might be corrupted/broken");
         }
 
-        IFormFile imgFile = form.Files["img"]!;
+        // check for image content
+
+        IFormFile imgFile = form.Files["img"]!; // raw img file
 
         if (imgFile is null || imgFile.Length == 0)
         {
@@ -71,6 +81,8 @@ public class Response
         }
 
         bool inserted = false;
+
+        // try to insert data to db
 
         // try for five times only to avoid infinite loop
         for (int i = 0; i < 5; i++)
@@ -99,10 +111,22 @@ public class Response
         }
 
         if (!inserted) return Results.InternalServerError("ERROR: Server failed to create unique employee code");
+        string imgFilepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
+        await tool.SaveEmployeeJpeg(imgFile, imgFilepath); // tested until right here
+        byte[] qrCode = tool.GenerateQrCode(employee.Code!);
 
-        string filepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
+        Byte[] pdfByte = await tool.CreateEmployeeId(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
 
-        return Results.Ok();
+        try
+        {
+            await tool.SendIdViaGmail(pdfByte, employee.Name!, employee.Gmail!);
+        } catch (Exception ex)
+        {
+            return Results.InternalServerError(ex);
+        }
+
+        // send via gmail
+        return Results.File(pdfByte, contentType: "application/pdf");
     }
 
     public async Task<IResult> SignIn(AdminDto admin, MysqlDb db, Byte[] keyBytes)

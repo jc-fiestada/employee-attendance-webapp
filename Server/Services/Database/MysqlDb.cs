@@ -88,7 +88,7 @@ public class MysqlDb
         await command.ExecuteNonQueryAsync();
     }
 
-    // remove this later
+    /*
     private async Task InsertAdminCredentials()
     {
         string username = Environment.GetEnvironmentVariable("admin_username") ?? throw new InvalidOperationException("ERROR: Missing admin username credentials");
@@ -104,7 +104,7 @@ public class MysqlDb
         command.Parameters.AddWithValue("@password", BCrypt.Net.BCrypt.HashPassword(password).ToString());
 
         await command.ExecuteNonQueryAsync();
-    } 
+    }  */
 
     // put this to an endpoint and use it once
     public async Task InitializeDbAndTable()
@@ -118,11 +118,12 @@ public class MysqlDb
 
     // just use once to initiate the admin credentials 
 
-    // remove this later
+    /*
     public async Task AdminCredentialsInit()
     {
         await InsertAdminCredentials();
     }
+    */
 
     
 

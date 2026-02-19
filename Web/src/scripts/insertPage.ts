@@ -53,7 +53,15 @@ employeeForm.addEventListener("submit", async (e) => {
         return;
     }
 
+    const pdfBlob = await response.blob();
+
+    const pdfUrl = window.URL.createObjectURL(pdfBlob);
+
+    window.open(pdfUrl, "_blank");
+
     Toast.show({message : "It works bruh", type : "ok"})
+
+
 });
 
 
