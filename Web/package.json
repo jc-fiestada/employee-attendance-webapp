@@ -4,8 +4,8 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "parcel src/pages/employee/main.html src/pages/admin/401.html src/pages/admin/signin.html src/pages/admin/main.html src/pages/admin/insert.html",
-    "build": "parcel build src/pages/employee/main.html src/pages/admin/401.html src/pages/admin/signin.html src/pages/admin/main.html src/pages/admin/insert.html"
+    "dev": "parcel src/pages/admin/attendance.html src/pages/employee/main.html src/pages/admin/401.html src/pages/admin/signin.html src/pages/admin/main.html src/pages/admin/insert.html",
+    "build": "parcel build src/pages/admin/attendance.html src/pages/employee/main.html src/pages/admin/401.html src/pages/admin/signin.html src/pages/admin/main.html src/pages/admin/insert.html"
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Attendance</title>
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/attendance.css">
+</head>
+
+<body>
+    <div class="page-container">
+
+        <header class="admin-header">
+            <div class="header-left">
+                <h1 class="admin-title">ADMIN</h1>
+            </div>
+            <div class="header-center">
+                <p class="page-label">Attendance</p>
+            </div>
+        </header>
+
+        <div class="main-content-wrapper">
+            <aside class="sidebar" id="sidebar">
+                <button class="toggle-btn" id="toggleSidebar">☰</button>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li class="sidebar-item">
+                            <a href="./main.html">
+                                <span class="icon">🏠</span>
+                                <span class="text">Home</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a href="./insert.html">
+                                <span class="icon">➕</span>
+                                <span class="text">Insert</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a href="./attendance.html">
+                                <span class="icon">📅</span>
+                                <span class="text">Attendance</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="admin-main">
+
+                <div class="table-section">
+
+                    <div class="table-container">
+
+                        <div class="table-header attendance-header">
+                            <div>Photo</div>
+                            <div>Name</div>
+                            <div>Attendance Date</div>
+                        </div>
+
+                        <div id="attendance-container" class="table-body">
+                            <div class="table-row attendance-row">
+                                <div><img src="https://via.placeholder.com/45" /></div>
+                                <div>Juan Dela Cruz</div>
+                                <div>2026-02-20 08:15 AM</div>
+                            </div>
+                        
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+        <footer class="admin-footer">
+            <p>Employee Monitoring System</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>

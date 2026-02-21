@@ -22,11 +22,23 @@
         <select id="updateField">
             <option value="name">Name</option>
             <option value="sex">Sex</option>
-            <option value="gmail">Gmail</option>
             <option value="department">Department</option>
         </select>
 
         <input type="text" id="updateValue" placeholder="Enter new value" />
+
+        <select id="updateSex" style="display:none;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+
+        <select id="updateDepartment" style="display:none;">
+            <option value="it">IT</option>
+            <option value="marketing">HR</option>
+            <option value="finance">Finance</option>
+            <option value="customer service">Finance</option>
+            <option value="department manager">Finance</option>
+        </select>
 
         <div class="modal-actions">
             <button id="confirmUpdate">Update</button>
@@ -34,6 +46,7 @@
         </div>
     </div>
 </div>
+
 
 <body>
 
@@ -66,6 +79,12 @@
                                 <span class="text">Insert</span>
                             </a>
                         </li>
+                        <li class="sidebar-item">
+                            <a href="./attendance.html">
+                                <span class="icon">📅</span>
+                                <span class="text">Attendance</span>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </aside>
@@ -95,8 +114,9 @@
                             <div>Actions</div>
                         </div>
 
-                        <div class="table-body">
-                            <div class="table-row">
+                        <div id="employee-container" class="table-body">
+                            
+                            <div id="" class="table-row">
                                 <div><img src="https://via.placeholder.com/45" /></div>
                                 <div>Juan Dela Cruz</div>
                                 <div>Male</div>
@@ -104,84 +124,7 @@
                                 <div>IT</div>
                                 <div>EMP-001</div>
                                 <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </div>
-                            </div>
-
-                            <div class="table-row">
-                                <div><img src="https://via.placeholder.com/45" /></div>
-                                <div>Juan Dela Cruz</div>
-                                <div>Male</div>
-                                <div>juan@gmail.com</div>
-                                <div>IT</div>
-                                <div>EMP-001</div>
-                                <div class="actions">
+                                    <button class="upload-btn">Upload</button>
                                     <button class="update-btn">Update</button>
                                     <button class="delete-btn">Delete</button>
                                 </div>
