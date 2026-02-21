@@ -9,6 +9,7 @@ using EmployeeAttendance.Services.Database;
 using EmployeeAttendance.Models.Dto;
 using EmployeeAttendance.Services.Service;
 using System.ComponentModel.DataAnnotations;
+using EmployeeAttendance.Models.Entities;
 
 
 string gmailEnvFilepath = Path.GetFullPath(Path.Combine("..", "..", "DummyGmail", "gmail.env"));
@@ -19,6 +20,8 @@ Env.Load(gmailEnvFilepath);
 string jwtSecurityKey = Environment.GetEnvironmentVariable("jwt_secret_key") ?? throw new Exception("ERROR: JWT secret key is missing");
 byte[] keyBytes = Encoding.UTF8.GetBytes(jwtSecurityKey);
 string distDir = Path.GetFullPath(Path.Combine("..", "Web", "dist"));
+string resourcesDir = Path.GetFullPath(Path.Combine("..", "Resources"));
+Console.WriteLine(resourcesDir);
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
@@ -55,12 +58,20 @@ app.UseStaticFiles(new StaticFileOptions()
     RequestPath = ""
 });
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(resourcesDir),
+    RequestPath = "/resources"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+
 // Admin Endpoints
 
-
+// DONT FORGET TO ADD THE AUTHORIZATION BEFORE FINALIZING !!!!
 
 // tested
 app.MapPost("/admin/signin", async (AdminDto admin, Response serverResponse, MysqlDb db) =>
@@ -84,21 +95,29 @@ app.MapPost("/insert/employee", async (Response response, HttpRequest request, M
     return await response.InsertEmployeeData(request, db, tool);
 }).RequireAuthorization("AdminOnly");
 
+app.MapGet("/select-all/employee", async (Response response, MysqlDb db) =>
+{
+    return await response.SelectAllEmployee(db);
+});
+
 
 app.MapPost("/delete/employee", async (EmployeeId employee, Response response, MysqlDb db) =>
 {
     return await response.DeleteEmployee(employee.id, db);
 });
 
-app.MapPost("/update/employee", async (EmployeeId id) =>
+app.MapPost("/update/employee", async (UpdateEmployeeDto update, Response response, MysqlDb db) =>
 {
-    
+    return await response.UpdateEmployee(update, db);
 });
 
+
+// Employee Endpoints
 
 
 
 
 app.Run();
 
+// im kinda tired rn so ill just use this 
 record EmployeeId (int id);

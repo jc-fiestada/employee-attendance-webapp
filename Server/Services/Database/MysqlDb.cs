@@ -7,10 +7,8 @@ namespace EmployeeAttendance.Services.Database;
 
 public class MysqlDb
 {
-
     private readonly string _serverConn; // use only to generate db
     private readonly string _dbConn; // use this for db connection
-
     public MysqlDb()
     {
         string _dbPassword = Environment.GetEnvironmentVariable("db_password") ?? throw new Exception("ERROR: database key missing");
@@ -90,7 +88,7 @@ public class MysqlDb
 
     private async Task<string> SelectEmployeeCode(int userId)
     {
-        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
 
         string query = "SELECT code FROM employees WHERE id = @id";
@@ -148,7 +146,7 @@ public class MysqlDb
 
     public async Task<List<Employee>> SelectAllEmployee()
     {
-        using MySqlConnection conn = new MySqlConnection();
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
 
         List<Employee> employees = new List<Employee>();
@@ -200,9 +198,7 @@ public class MysqlDb
     {
         using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
-
         string query = "SELECT * FROM admin";
-
         using MySqlCommand command = new MySqlCommand(query, conn);
         using MySqlDataReader reader = await command.ExecuteReaderAsync();
 
@@ -223,17 +219,27 @@ public class MysqlDb
         return true;
     }
 
-
-    public async Task UpdateEmployee(string column, object value, int employeeId)
+    public async Task<int> UpdateEmployee(string column, object value, int employeeId)
     {
         string[] columns = ["name", "sex", "department"];
 
         if (!columns.Contains(column))
         {
-            throw new Exception("Invalid column value");
+            throw new ArgumentException("Invalid column value");
         }
 
-        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        if (column.Contains("sex"))
+        {
+            if (column != "male" && column != "female") throw new ArgumentException();
+        }
+
+        if (columns.Contains("department"))
+        {
+            string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
+            if (!departments.Contains(column)) throw new ArgumentException(); 
+        }
+
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
 
         string query = $@"
@@ -241,27 +247,29 @@ public class MysqlDb
             SET {column} = @value
             WHERE id = @id
         ";
-            
+
         using MySqlCommand command = new MySqlCommand(query, conn);
         command.Parameters.AddWithValue("@value", value);
         command.Parameters.AddWithValue("@id", employeeId);
 
-        await command.ExecuteNonQueryAsync();
-    
+        int affected = await command.ExecuteNonQueryAsync();
+        return affected;
     }
     
 
     public async Task<string> DeleteEmployee(int employeeId)
     {
         string employeeCode = await SelectEmployeeCode(employeeId);
-        using MySqlConnection conn = new MySqlConnection(_serverConn);
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
         string query = "DELETE FROM employees WHERE id = @id";
 
         using MySqlCommand command = new MySqlCommand(query, conn);
         command.Parameters.AddWithValue("@id", employeeId);
 
-        await command.ExecuteNonQueryAsync();
+        int affected = await command.ExecuteNonQueryAsync();
+
+        if (affected == 0) throw new InvalidOperationException("User not found");
 
         return employeeCode;
     }

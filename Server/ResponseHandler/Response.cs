@@ -10,9 +10,8 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using Sprache;
 using MySqlConnector;
-
-
-
+using EmployeeAttendance.Models.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace EmployeeAttendance.ResponseHandler;
 
@@ -32,7 +31,6 @@ public class Response
         return Results.Ok();
     }
 
-    // unfinished
     public async Task<IResult> InsertEmployeeData(HttpRequest request, MysqlDb db, Tools tool)
     {
 
@@ -152,7 +150,7 @@ public class Response
 
         JwtSecurityToken token = new JwtSecurityToken(
             claims: userClaims,
-            expires: DateTime.UtcNow.AddMinutes(10),
+            expires: DateTime.UtcNow.AddMinutes(45),
             signingCredentials: new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256)
         );
 
@@ -168,13 +166,52 @@ public class Response
             string code = await db.DeleteEmployee(employeeId);
             string imgFilepath = Path.GetFullPath(Path.Combine("..", "Resources", $"{code}.jpeg"));
             File.Delete(imgFilepath);
-        } catch (Exception ex)
+        } catch (InvalidOperationException)
         {
-            Console.WriteLine(ex);
+            return Results.NotFound();
+        }
+         catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
             return Results.InternalServerError("Something went wrong - Internal server error");
         }
+        return Results.Ok();
+    }
 
+    public async Task<IResult> SelectAllEmployee(MysqlDb db)
+    {
+        List<Employee> employees;
+        try
+        {
+            employees = await db.SelectAllEmployee();
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.InternalServerError();
+        }
+        if (employees is null || employees.Count() == 0) return Results.NotFound();
+        return Results.Json(employees, statusCode: 200);
+    }
 
+    public async Task<IResult> UpdateEmployee(UpdateEmployeeDto update, MysqlDb db)
+    {
+        try
+        {
+            int affected = await db.UpdateEmployee(update.Column, update.Value, update.EmployeeId);
+            if (affected == 0)
+            {
+                return Results.NotFound();
+            }
+        } catch (ArgumentException ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.BadRequest();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.InternalServerError();
+        }
         return Results.Ok();
     }
 
