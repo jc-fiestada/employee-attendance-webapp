@@ -37,7 +37,7 @@ public class Tools
         // Name Check
         if (string.IsNullOrWhiteSpace(employee.Name)) throw new FormatException("Name must not be empty");
         if (employee.Name.Length > 255) throw new ArgumentException("Name must not exceed more than 255 characters");
-        if (!Regex.IsMatch(employee.Name, @"^[A-Za-z]+$")) throw new ArgumentException("Name must not contain any symbols");
+        if (!Regex.IsMatch(employee.Name, @"^[A-Za-z ]+$")) throw new ArgumentException("Name must not contain any symbols");
 
         // Sex Check
         if (string.IsNullOrWhiteSpace(employee.Sex)) throw new FormatException("Sex must not be empty");
@@ -52,6 +52,27 @@ public class Tools
         // gmail
         if (string.IsNullOrWhiteSpace(employee.Gmail)) throw new FormatException("Gmail must not be empty");
         if (!MailboxAddress.TryParse(employee.Gmail, out _)) throw new FormatException("Invalid Gmail format"); // still need more validation improvements, maybe later
+    }
+
+    public void ValidateUpdate(UpdateEmployeeDto employee) 
+    {
+        string[] columns = ["name", "sex", "department"];
+
+        if (!columns.Contains(employee.Column))
+        {
+            throw new ArgumentException("Invalid column value");
+        }
+
+        if (employee.Column.Contains("sex"))
+        {
+            if (employee.Value != "male" && employee.Value != "female") throw new ArgumentException();
+        }
+
+        if (columns.Contains("department"))
+        {
+            string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
+            if (!departments.Contains(employee.Column)) throw new ArgumentException(); 
+        }
     }
 
     public async Task SendIdViaGmail(byte[] pdfBytes, string employeeName, string employeeEmail)

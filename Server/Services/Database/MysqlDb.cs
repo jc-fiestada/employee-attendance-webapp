@@ -219,38 +219,20 @@ public class MysqlDb
         return true;
     }
 
-    public async Task<int> UpdateEmployee(string column, object value, int employeeId)
+    public async Task<int> UpdateEmployee(UpdateEmployeeDto employee)
     {
-        string[] columns = ["name", "sex", "department"];
-
-        if (!columns.Contains(column))
-        {
-            throw new ArgumentException("Invalid column value");
-        }
-
-        if (column.Contains("sex"))
-        {
-            if (column != "male" && column != "female") throw new ArgumentException();
-        }
-
-        if (columns.Contains("department"))
-        {
-            string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
-            if (!departments.Contains(column)) throw new ArgumentException(); 
-        }
-
         using MySqlConnection conn = new MySqlConnection(_dbConn);
         await conn.OpenAsync();
 
         string query = $@"
             UPDATE employees
-            SET {column} = @value
+            SET {employee.Column} = @value
             WHERE id = @id
         ";
 
         using MySqlCommand command = new MySqlCommand(query, conn);
-        command.Parameters.AddWithValue("@value", value);
-        command.Parameters.AddWithValue("@id", employeeId);
+        command.Parameters.AddWithValue("@value", employee.Value);
+        command.Parameters.AddWithValue("@id", employee.EmployeeId);
 
         int affected = await command.ExecuteNonQueryAsync();
         return affected;
@@ -273,6 +255,76 @@ public class MysqlDb
 
         return employeeCode;
     }
+
+    public async Task InsertAttendance(AttendanceDto attendance)
+    {
+        Console.WriteLine("TRIGGERED!!");
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = "INSERT INTO attendance (fk_code, attendance_date) VALUES (@fk_code, @attendance_date)";
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@fk_code", attendance.Code);
+        command.Parameters.AddWithValue("@attendance_date", attendance.attendance);
+
+        await command.ExecuteNonQueryAsync();
+    }
+
+
+    // use name for greetings in ui
+    public async Task<string?> ValidateEmployeeCode(string code)
+    {
+        string? name = null;
+
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = "SELECT name FROM employees WHERE code = @code";
+
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@code", code);
+
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
+
+        if (await reader.ReadAsync()) name = reader.GetString("name");
+        return name;
+    }
+
+    public async Task<List<Attendance>> SelectAllAttendance()
+    {
+        List<Attendance> attendanceList = new List<Attendance>();
+
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = @"
+            SELECT
+                a.attendance_date,
+                a.fk_code,
+                e.name
+            FROM attendance a
+            INNER JOIN employees e
+                ON e.code = a.fk_code
+            ORDER BY a.attendance_date DESC;
+        ";
+        using MySqlCommand command = new MySqlCommand(query, conn);
+
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            Attendance attendance = new Attendance()
+            {
+                Name = reader.GetString("name"),
+                Code = reader.GetString("fk_code"),
+                DateAndTime = reader.GetDateTime("attendance_date")
+            };
+
+            attendanceList.Add(attendance);
+        }
+
+        return attendanceList;
+    } 
 
     
 

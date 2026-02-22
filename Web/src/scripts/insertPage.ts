@@ -1,4 +1,6 @@
 import { Toast } from "./shared/toast";
+import { ResponseHandler } from "./shared/response";
+import { PageAccessAuth } from "./shared/pageAccessAuth";
 
 const employeeForm = <HTMLFormElement> document.getElementById("employeeForm");
 
@@ -12,7 +14,9 @@ const photoInput = <HTMLInputElement> document.getElementById("photoInput");
 const preview = <HTMLDivElement> document.getElementById("photoPreview");
 
 
-//test first update later
+document.addEventListener("DOMContentLoaded", async () => {
+    await PageAccessAuth.AdminAuth();
+});
 
 // sends employee data including image
 employeeForm.addEventListener("submit", async (e) => {
@@ -49,38 +53,12 @@ employeeForm.addEventListener("submit", async (e) => {
         body : formData
     });
 
+    const responseHandler = new ResponseHandler();
+    
     if (!response.ok) {
-
-        if (response.status === 401){
-            window.location.href = "401.html";
-            return;
-        }
-
-        if (response.status === 400){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Insert Failed - Client request data might be corrupted/missing", "type" : "error"});
-            return;
-        }
-
-        if (response.status === 409){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : `${message}`, "type" : "warning"});
-            return;
-        }
-
-        if(response.status === 500){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Internal Server Error - Something went wrong", "type" : "error"});
-            return;
-        }
-
-        const message = await response.text()
+        const message = await response.text();
         console.log(`ERROR: ${message}`);
-        Toast.show({message : "Internal Server Error - Something went wrong", type : "error"})
-        return;
+        responseHandler.responseNotif("Insert", response.status, message);
     }
 
     const pdfBlob = await response.blob();
@@ -90,8 +68,6 @@ employeeForm.addEventListener("submit", async (e) => {
     window.open(pdfUrl, "_blank");
 
     Toast.show({message : "Employee ID has been sent", type : "ok"})
-
-
 });
 
 uploadBtn.addEventListener("click", () => photoInput.click());

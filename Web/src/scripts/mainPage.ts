@@ -1,5 +1,7 @@
 import { Employees } from "./interface/Employee";
 import { Toast } from "./shared/toast";
+import { ResponseHandler } from "./shared/response";
+import { PageAccessAuth } from "./shared/pageAccessAuth";
 
 
 
@@ -8,6 +10,8 @@ import { Toast } from "./shared/toast";
 // i hate ts
 
 // note : disable buttons when processing to prevent spam
+
+// kinda too tired to refactor ts 
 
 
 let currentlySelectedId : number | null = null;
@@ -29,8 +33,9 @@ const updateDepartment = document.getElementById("updateDepartment") as HTMLSele
 
 // load table on dom load
 document.addEventListener("DOMContentLoaded", async () => {
+    await PageAccessAuth.AdminAuth();
     await updateTable() 
-    Toast.show({message: "heyyyyy", type: "error"});
+    Toast.show({message: "Welcome Admin", type: "ok"});
 });
 
 // delete user
@@ -49,44 +54,16 @@ confirmDeleteBtn.addEventListener("click", async () => {
 
     closeModal();
 
-    // ill turn this into a function later
+    const responseHandler = new ResponseHandler();
+    
     if (!response.ok) {
-
-        if (response.status === 401){
-            window.location.href = "401.html";
-            return;
-        }
-
-        if (response.status === 400){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Delete Failed - Client request data might be corrupted/missing", "type" : "error"});
-            return;
-        }
-
-        if (response.status === 404){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Delete Failed - User not found", "type" : "warning"});
-            return;
-        }
-
-        if(response.status === 500){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Internal Server Error - Something went wrong", "type" : "error"});
-            return;
-        }
-
-        const message = await response.text()
+        const message = await response.text();
         console.log(`ERROR: ${message}`);
-        Toast.show({message : "Internal Server Error - Something went wrong", type : "error"})
-        return;
+        responseHandler.responseNotif("Delete", response.status, message);
     }
 
-    Toast.show({message: "yey", type: "ok"});
+    Toast.show({message: "Employee has been successfully deleted", type: "ok"});
     await updateTable();
-        
 });
 
 // update user
@@ -108,44 +85,12 @@ confirmUpdateBtn.addEventListener("click", async () => {
 
     closeModal();
 
-    // ill turn this into a function later
+    const responseHandler = new ResponseHandler();
+
     if (!response.ok) {
-
-        if (response.status === 401){
-            window.location.href = "401.html";
-            return;
-        }
-
-        if (response.status === 400){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Delete Failed - Client request data might be corrupted/missing", "type" : "error"});
-            return;
-        }
-
-        if (response.status === 404){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Update Failed - User not found", "type" : "warning"});
-            return;
-        }
-
-        if(response.status === 500){
-            const message = await response.text();
-            console.log(`ERROR: ${message}`);
-            Toast.show({"message" : "Internal Server Error - Something went wrong", "type" : "error"});
-            return;
-        }
-
-        const message = await response.text()
+        const message = await response.text();
         console.log(`ERROR: ${message}`);
-        Toast.show({message : "Internal Server Error - Something went wrong", type : "error"})
-        return;
-    }
-
-    if (!response.ok){
-        Toast.show({message: "Error", type: "error"});
-        return;
+        responseHandler.responseNotif("Update", response.status, message);
     }
 
     Toast.show({message: "yey", type: "ok"});
@@ -197,7 +142,6 @@ document.addEventListener("click", (e) => {
 
 
 // methods
-
 function closeModal(){
     deleteModal.style.display = "none";
     updateModal.style.display = "none";
@@ -217,7 +161,11 @@ async function updateTable(){
         }});
     
     if (!response.ok){
-        Toast.show({message: "error", type: "error"})
+        if (response.status === 404){
+            Toast.show({message: "No employee exist's in the database yet", type: "warning"});
+            return;
+        }
+        Toast.show({message: "Failed to load table", type: "error"});
         return;
     }
 

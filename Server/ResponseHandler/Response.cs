@@ -58,10 +58,12 @@ public class Response
             tool.ValidateEmployee(employee);
         } catch (FormatException ex)
         {
-            return Results.BadRequest(ex.Message);
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.UnprocessableEntity(ex.Message);
         } catch (ArgumentException ex)
         {
-            return Results.BadRequest(ex.Message);
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.UnprocessableEntity(ex.Message);
         }
         catch (Exception ex)
         {
@@ -75,7 +77,7 @@ public class Response
 
         if (imgFile is null || imgFile.Length == 0)
         {
-            return Results.BadRequest("Missing image detected");
+            return Results.UnprocessableEntity("Missing image detected");
         }
 
         bool inserted = false;
@@ -97,20 +99,20 @@ public class Response
                 continue;
             } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_name"))
             {
-                return Results.Conflict($"ERROR: Name already exist's in the database");
+                return Results.Conflict($"Name already exist's in the database");
             } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_gmail"))
             {
-                return Results.Conflict($"ERROR: Gmail already exist's in the database");
+                return Results.Conflict($"Gmail already exist's in the database");
             } catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return Results.InternalServerError("ERROR: Something went wrong from the database");
+                return Results.InternalServerError("Something went wrong from the database");
             }
         }
 
         if (!inserted) return Results.InternalServerError("ERROR: Server failed to create unique employee code");
         string imgFilepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
-        await tool.SaveEmployeeJpeg(imgFile, imgFilepath); // tested until right here
+        await tool.SaveEmployeeJpeg(imgFile, imgFilepath);
         byte[] qrCode = tool.GenerateQrCode(employee.Code!);
 
         Byte[] pdfByte = await tool.CreateEmployeeId(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
@@ -168,7 +170,7 @@ public class Response
             File.Delete(imgFilepath);
         } catch (InvalidOperationException)
         {
-            return Results.NotFound();
+            return Results.NotFound("Employee id not found");
         }
          catch (Exception ex)
         {
@@ -189,15 +191,16 @@ public class Response
             Console.WriteLine($"ERROR: {ex}");
             return Results.InternalServerError();
         }
-        if (employees is null || employees.Count() == 0) return Results.NotFound();
+        if (employees is null || employees.Count() == 0) return Results.NotFound("No Employee data exist's yet");
         return Results.Json(employees, statusCode: 200);
     }
 
-    public async Task<IResult> UpdateEmployee(UpdateEmployeeDto update, MysqlDb db)
+    public async Task<IResult> UpdateEmployee(UpdateEmployeeDto update, MysqlDb db, Tools tool)
     {
         try
         {
-            int affected = await db.UpdateEmployee(update.Column, update.Value, update.EmployeeId);
+            tool.ValidateUpdate(update);
+            int affected = await db.UpdateEmployee(update);
             if (affected == 0)
             {
                 return Results.NotFound();
@@ -213,6 +216,43 @@ public class Response
             return Results.InternalServerError();
         }
         return Results.Ok();
+    }
+
+    public async Task<IResult> RecordEmployeeAttendace(AttendanceDto attendance, MysqlDb db)
+    {
+        if (string.IsNullOrWhiteSpace(attendance.Code)) return Results.BadRequest();
+        attendance.attendance = DateTime.Now;
+        try
+        {
+            await db.InsertAttendance(attendance);
+
+        }catch (MySqlException ex) when (ex.Number == 1452)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.BadRequest();
+        }
+         catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.InternalServerError();
+        }
+
+        return Results.Ok();
+    }
+
+    public async Task<IResult> SelectAllAttendance(MysqlDb db)
+    {
+        List<Attendance> attendance;
+        try
+        {
+            attendance = await db.SelectAllAttendance();
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.InternalServerError();
+        }
+        if (attendance is null || attendance.Count() == 0) return Results.NotFound();
+        return Results.Json(attendance, statusCode: 200);
     }
 
 }

@@ -13,5 +13,8 @@
   "devDependencies": {
     "parcel": "^2.16.4",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "qr-scanner": "^1.4.2"
   }
 }

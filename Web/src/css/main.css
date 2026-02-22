@@ -439,11 +439,6 @@ html, body {
     color: white;
 }
 
-
-/* =========================
-   TOAST SYSTEM (Required by ToastManager)
-   ========================= */
-
 #toast-container {
     position: fixed;
     top: 20px;
@@ -463,12 +458,10 @@ html, body {
     border-left: 4px solid var(--accent);
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 
-    /* Initial hidden state (important for animation) */
     opacity: 0;
     transform: translateX(40px);
 }
 
-/* Type Variants */
 .toast-ok {
     border-color: #22c55e;
     background: #052e1b;
@@ -484,7 +477,6 @@ html, body {
     background: #3a0d0d;
 }
 
-/* Animation triggers (added/removed by JS) */
 .toast.show {
     animation: toast-in 0.35s ease forwards;
 }
@@ -493,7 +485,6 @@ html, body {
     animation: toast-out 0.35s ease forwards;
 }
 
-/* Animations */
 @keyframes toast-in {
     from {
         opacity: 0;

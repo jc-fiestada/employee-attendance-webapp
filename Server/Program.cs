@@ -79,7 +79,7 @@ app.MapPost("/admin/signin", async (AdminDto admin, Response serverResponse, Mys
     return await serverResponse.SignIn(admin, db, keyBytes);
 });
 
-app.MapPost("/authenticate/page-access", () =>
+app.MapGet("/authenticate/page-access", () =>
 {
     return Results.Ok("Welcome Admin");
 }).RequireAuthorization("AdminOnly");
@@ -88,7 +88,7 @@ app.MapPost("/authenticate/page-access", () =>
 app.MapGet("/setup/database", async (Response serverResponse) =>
 {
     await serverResponse.DbAndTableInit();
-});
+}).RequireAuthorization("AdminOnly");
 
 app.MapPost("/insert/employee", async (Response response, HttpRequest request, MysqlDb db, Tools tool) =>
 {
@@ -98,23 +98,31 @@ app.MapPost("/insert/employee", async (Response response, HttpRequest request, M
 app.MapGet("/select-all/employee", async (Response response, MysqlDb db) =>
 {
     return await response.SelectAllEmployee(db);
-});
+}).RequireAuthorization("AdminOnly");
 
 
 app.MapPost("/delete/employee", async (EmployeeId employee, Response response, MysqlDb db) =>
 {
     return await response.DeleteEmployee(employee.id, db);
-});
+}).RequireAuthorization("AdminOnly");
 
-app.MapPost("/update/employee", async (UpdateEmployeeDto update, Response response, MysqlDb db) =>
+app.MapPost("/update/employee", async (UpdateEmployeeDto update, Response response, MysqlDb db, Tools tool) =>
 {
-    return await response.UpdateEmployee(update, db);
-});
+    return await response.UpdateEmployee(update, db, tool);
+}).RequireAuthorization("AdminOnly");
+
+app.MapGet("/select/employee-attendance", async (Response response, MysqlDb db) =>
+{
+    return await response.SelectAllAttendance(db);
+}).RequireAuthorization("AdminOnly");
 
 
 // Employee Endpoints
 
-
+app.MapPost("/record/employee-attendance", async (AttendanceDto attendance, Response response, MysqlDb db) =>
+{
+    return await response.RecordEmployeeAttendace(attendance, db);
+});
 
 
 app.Run();
