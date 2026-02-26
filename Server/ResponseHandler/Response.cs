@@ -12,6 +12,7 @@ using Sprache;
 using MySqlConnector;
 using EmployeeAttendance.Models.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Xml.XPath;
 
 namespace EmployeeAttendance.ResponseHandler;
 
@@ -100,9 +101,6 @@ public class Response
             } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_name"))
             {
                 return Results.Conflict($"Name already exist's in the database");
-            } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_gmail"))
-            {
-                return Results.Conflict($"Gmail already exist's in the database");
             } catch (Exception ex)
             {
                 Console.WriteLine(ex);
@@ -115,7 +113,7 @@ public class Response
         await tool.SaveEmployeeJpeg(imgFile, imgFilepath);
         byte[] qrCode = tool.GenerateQrCode(employee.Code!);
 
-        Byte[] pdfByte = await tool.CreateEmployeeId(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
+        Byte[] pdfByte = await tool.CreateEmployeeIdPdf(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
 
         try
         {
@@ -195,6 +193,25 @@ public class Response
         return Results.Json(employees, statusCode: 200);
     }
 
+    public async Task<IResult> UploadEmployeeIdViaGmail(EmployeeId employeeId, Tools tools, MysqlDb db)
+    {
+        try
+        {
+            Employee? employee = await db.SelectEmployee(employeeId);
+            if (employee is null) return Results.BadRequest();
+            byte[] qrBytes = tools.GenerateQrCode(employee.Code);
+            string htmlFilepath = Path.Combine("id-template", "template.html");
+            string imgFilepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
+            byte[] pdfBytes = await tools.CreateEmployeeIdPdf(htmlFilepath, imgFilepath, EmployeeDtoMapping.MaptoEmployeeDto(employee), qrBytes);
+            await tools.SendIdViaGmail(pdfBytes, employee.Name.ToUpper(), employee.Gmail);
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.InternalServerError();
+        }
+        return Results.Ok();
+    }
+
     public async Task<IResult> UpdateEmployee(UpdateEmployeeDto update, MysqlDb db, Tools tool)
     {
         try
@@ -246,6 +263,8 @@ public class Response
         try
         {
             attendance = await db.SelectAllAttendance();
+
+            if (attendance is null || attendance.Count() == 0) return Results.NotFound("No employee currently exist's in the database");
         } catch (Exception ex)
         {
             Console.WriteLine($"ERROR: {ex}");
@@ -253,6 +272,38 @@ public class Response
         }
         if (attendance is null || attendance.Count() == 0) return Results.NotFound();
         return Results.Json(attendance, statusCode: 200);
+    }
+
+    public async Task<IResult> SelectFilteredEmployee(FilteredEmployeeDto filter, MysqlDb db)
+    {
+        if (filter.Column != "name" && filter.Column != "department") return Results.BadRequest();
+        
+        if (filter.Column == "department")
+        {
+            string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
+            if (!departments.Contains(filter.Value)) return Results.BadRequest();
+        }
+
+        List<Employee> employees;
+
+        try
+        {
+            employees = await db.SelectFilteredEmployees(filter);
+        } catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR: ${ex}");
+            return Results.InternalServerError();
+        }
+
+        if (employees.Count() == 0 || employees is null)
+        {
+            Console.WriteLine("trigger not found on filter");
+            return Results.NotFound();
+        }
+        
+
+        return Results.Json(employees, statusCode: 200);
+        
     }
 
 }

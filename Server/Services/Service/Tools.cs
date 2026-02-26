@@ -71,7 +71,7 @@ public class Tools
         if (columns.Contains("department"))
         {
             string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
-            if (!departments.Contains(employee.Column)) throw new ArgumentException(); 
+            if (!departments.Contains(employee.Value)) throw new ArgumentException(); 
         }
     }
 
@@ -111,7 +111,7 @@ public class Tools
         await smtp.DisconnectAsync(true);
     }
 
-    public async Task<Byte[]> CreateEmployeeId(string htmlFilepath, string imgFilepath, EmployeeDto employee, Byte[] qrCodeGraphic)
+    public async Task<Byte[]> CreateEmployeeIdPdf(string htmlFilepath, string imgFilepath, EmployeeDto employee, Byte[] qrCodeGraphic)
     {
         string html = await File.ReadAllTextAsync(htmlFilepath);
 
@@ -121,8 +121,8 @@ public class Tools
         string qrSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(qrCodeGraphic)}";
 
         html = html
-                .Replace("{{Name}}", employee.Name)
-                .Replace("{{Department}}", employee.Department)
+                .Replace("{{Name}}", employee.Name!.ToUpper())
+                .Replace("{{Department}}", employee.Department!.ToUpper())
                 .Replace("{{QrCode}}", qrSrc)
                 .Replace("{{Photo}}", imgSrc);
 

@@ -2,6 +2,7 @@ using MySqlConnector;
 using EmployeeAttendance.Models.Dto;
 using EmployeeAttendance.Models.Entities;
 using BCrypt.Net;
+using System.ComponentModel;
 
 namespace EmployeeAttendance.Services.Database;
 
@@ -43,7 +44,6 @@ public class MysqlDb
                 gmail VARCHAR(255) NOT NULL,
                 code VARCHAR(255) NOT NULL,
 
-                CONSTRAINT unique_gmail UNIQUE(gmail),
                 CONSTRAINT unique_code UNIQUE(code),
                 CONSTRAINT unique_name UNIQUE(name)
             )";
@@ -121,7 +121,8 @@ public class MysqlDb
         command.Parameters.AddWithValue("@password", BCrypt.Net.BCrypt.HashPassword(password).ToString());
 
         await command.ExecuteNonQueryAsync();
-    }  */
+    }  
+    */
 
     // put this to an endpoint and use it once
     public async Task InitializeDbAndTable()
@@ -134,13 +135,15 @@ public class MysqlDb
 
 
     // just use once to initiate the admin credentials 
-
     /*
+    
     public async Task AdminCredentialsInit()
     {
         await InsertAdminCredentials();
     }
+
     */
+    
 
     
 
@@ -325,6 +328,64 @@ public class MysqlDb
 
         return attendanceList;
     } 
+
+    public async Task<Employee?> SelectEmployee(EmployeeId employeeId)
+    {
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = @"SELECT * FROM employees WHERE id = @id";
+
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@id", employeeId.id);
+
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync()) return null;
+
+        return new Employee
+        {
+            Id = reader.GetInt32("id"),
+            Name = reader.GetString("name"),
+            Sex = reader.GetString("sex"),
+            Gmail = reader.GetString("gmail"),
+            Department = reader.GetString("department"),
+            Code = reader.GetString("code")
+        };
+    }
+
+
+    public async Task<List<Employee>> SelectFilteredEmployees(FilteredEmployeeDto filter)
+    {
+        List<Employee> employees = new List<Employee>();
+        using MySqlConnection conn = new MySqlConnection(_dbConn);
+        await conn.OpenAsync();
+
+        string query = $@"
+            SELECT * FROM employees
+            WHERE {filter.Column} = @value;
+        ";
+
+        using MySqlCommand command = new MySqlCommand(query, conn);
+        command.Parameters.AddWithValue("@value", filter.Value);
+
+        using MySqlDataReader reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            Employee employee = new Employee
+            {
+                Id = reader.GetInt32("id"),
+                Name = reader.GetString("name"),
+                Sex = reader.GetString("sex"),
+                Department = reader.GetString("department"),
+                Code = reader.GetString("code"),
+                Gmail = reader.GetString("gmail")
+            };
+            employees.Add(employee);
+        }
+        return employees;
+
+    }
 
     
 

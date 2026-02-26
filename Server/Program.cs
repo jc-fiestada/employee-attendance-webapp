@@ -68,12 +68,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-
 // Admin Endpoints
 
-// DONT FORGET TO ADD THE AUTHORIZATION BEFORE FINALIZING !!!!
-
-// tested
 app.MapPost("/admin/signin", async (AdminDto admin, Response serverResponse, MysqlDb db) =>
 {
     return await serverResponse.SignIn(admin, db, keyBytes);
@@ -116,6 +112,10 @@ app.MapGet("/select/employee-attendance", async (Response response, MysqlDb db) 
     return await response.SelectAllAttendance(db);
 }).RequireAuthorization("AdminOnly");
 
+app.MapPost("/select/filtered-employee", async (FilteredEmployeeDto dto, Response response, MysqlDb db) =>
+{
+    return await response.SelectFilteredEmployee(dto, db);
+});
 
 // Employee Endpoints
 
@@ -124,8 +124,13 @@ app.MapPost("/record/employee-attendance", async (AttendanceDto attendance, Resp
     return await response.RecordEmployeeAttendace(attendance, db);
 });
 
+app.MapPost("/upload/employee-id", async (EmployeeId employeeId, Response response, MysqlDb db, Tools tools) =>
+{   
+    return await response.UploadEmployeeIdViaGmail(employeeId, tools, db);
+}).RequireAuthorization("AdminOnly");
+
 
 app.Run();
 
 // im kinda tired rn so ill just use this 
-record EmployeeId (int id);
+public record EmployeeId (int id);

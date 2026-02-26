@@ -30,12 +30,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const attendance : Attendance[] = await response.json();
 
     attendance.forEach(row => {
+
+        const dateAndTime = new Date(row.dateAndTime);
+
         attendanceContainer.innerHTML += `
             <div class="table-row attendance-row">
             <div><img src="/resources/${row.code}.jpeg" />
             </div>
-                <div>${row.name}</div>
-                <div>${row.dateAndTime}</div>
+                <div>${row.name.toUpperCase()}</div>
+                <div>${dateAndTime.toLocaleString()}</div>
             </div>`
     });
 });

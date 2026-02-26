@@ -4,14 +4,13 @@ import QrScanner from "qr-scanner";
 
 let qrCode : string | null = null;
 
-
 const qrVideo = <HTMLVideoElement> document.getElementById("qr-video");
-const videoError = <HTMLDivElement> document.getElementById("video-error");
 
 const scanner = new QrScanner(
     qrVideo,
     async result => {
         console.log("QR TRIGGERED");
+        console.log(`Code: ${result}`);
         if (result === qrCode) return;
         qrCode = result;
 
@@ -42,6 +41,7 @@ const scanner = new QrScanner(
 
 document.addEventListener("DOMContentLoaded", async () => {
     await scanner.start().catch(err => {
+        console.log(err);
         Toast.show(({message: "No Camera Detected", type: "error"}));;
     });
 })

@@ -3,6 +3,7 @@ import { ResponseHandler } from "./shared/response";
 import { PageAccessAuth } from "./shared/pageAccessAuth";
 
 const employeeForm = <HTMLFormElement> document.getElementById("employeeForm");
+const submitBtn = <HTMLButtonElement> document.getElementById("submit-employee-btn");
 
 const sex = <HTMLInputElement> document.getElementById("sex");
 const department = <HTMLInputElement> document.getElementById("department");
@@ -21,9 +22,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 // sends employee data including image
 employeeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    submitBtn.disabled = true;
 
     if (photoInput.files == null || photoInput.files.length === 0) {
         Toast.show({message: "Image must be included", type: "error"});
+        submitBtn.disabled = false;
         return;
     }
 
@@ -59,6 +62,8 @@ employeeForm.addEventListener("submit", async (e) => {
         const message = await response.text();
         console.log(`ERROR: ${message}`);
         responseHandler.responseNotif("Insert", response.status, message);
+        submitBtn.disabled = false;
+        return;
     }
 
     const pdfBlob = await response.blob();
@@ -68,6 +73,7 @@ employeeForm.addEventListener("submit", async (e) => {
     window.open(pdfUrl, "_blank");
 
     Toast.show({message : "Employee ID has been sent", type : "ok"})
+    submitBtn.disabled = false;
 });
 
 uploadBtn.addEventListener("click", () => photoInput.click());

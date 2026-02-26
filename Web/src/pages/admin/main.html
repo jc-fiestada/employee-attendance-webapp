@@ -36,8 +36,8 @@
             <option value="it">IT</option>
             <option value="marketing">HR</option>
             <option value="finance">Finance</option>
-            <option value="customer service">Finance</option>
-            <option value="department manager">Finance</option>
+            <option value="customer service">Customer Service</option>
+            <option value="department manager">Department Manager</option>
         </select>
 
         <div class="modal-actions">
@@ -93,14 +93,16 @@
 
                 <div class="table-section">
                     <div class="table-controls">
-                        <select class="department-filter">
-                            <option value="">All Departments</option>
-                            <option>IT</option>
-                            <option>HR</option>
-                            <option>Finance</option>
+                        <select id="department-search" class="department-filter">
+                            <option value="all">All Departments</option>
+                            <option value="it">IT</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="finance">Finance</option>
+                            <option value="customer service">Customer Service</option>
+                            <option value="department manager">Department Manager</option>
                         </select>
 
-                        <input type="text" class="search-input" placeholder="Search employee..." />
+                        <input id="name-search" type="text" class="search-input" placeholder="Search employee..." />
                     </div>
 
                     <div class="table-container">
