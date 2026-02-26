@@ -1,9 +1,9 @@
 # Employee Attendance WebApp (QR Code and Gmail Integration)
 
 A web application designed to simplify employee attendance management.  
-It features automated ID generation and QR code scanning.  
-Admin can manage employee records, generate unique IDs which are also used in generating Qr Code, 
-and track attendance efficiently while automating delivery of IDs via Gmail.  
+It features automated ID generation and QR code scanning.
+Admin can manage employee records, and track attendance efficiently while 
+automating delivery of IDs via Gmail.  
 
 ## Features
 
