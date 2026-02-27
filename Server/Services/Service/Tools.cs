@@ -159,9 +159,9 @@ public class Tools
                     Right = "0mm"
                 }
             });
-        } catch (Exception ex)
+        } catch (Exception)
         {
-            throw new Exception($"ERROR: {ex}");
+            throw new Exception($"ERROR: PDF ERROR");
         } finally
         {
             File.Delete(tempFile);

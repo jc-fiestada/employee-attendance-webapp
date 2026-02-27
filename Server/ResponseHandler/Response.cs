@@ -124,7 +124,7 @@ public class Response
         }
 
         // send via gmail
-        return Results.File(pdfByte, contentType: "application/pdf");
+        return Results.Ok();
     }
 
     public async Task<IResult> SignIn(AdminDto admin, MysqlDb db, Byte[] keyBytes)
