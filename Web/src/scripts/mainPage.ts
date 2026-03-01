@@ -1,16 +1,14 @@
-import { Employees } from "./interface/Employee";
+import { Employees } from "./models/Employee";
 import { Toast } from "./shared/toast";
 import { ResponseHandler } from "./shared/response";
-import { PageAccessAuth } from "./shared/pageAccessAuth";
+import { CrudResponseHandler } from "./response-handler/crud-ops";
+import { Token } from "./models/Token";
+import { Tools } from "./services/tools";
+import { AuthService } from "./response-handler/auth";
 
+const service = new CrudResponseHandler();
 
-// note : make sure to refactor some of these code and turn it into reusable methods
-// note : move these refactored methods to shared scripts
-// i hate ts
-// note : disable buttons when processing to prevent spam
-// kinda too tired to refactor ts 
-// i guess ill just plan a better structure for ts on my next proj
-
+// so i refactored it, and honestly it is satisfying to see my code in a cleaner state although it is still messy
 
 let currentlySelectedId : number | null = null;
 
@@ -34,19 +32,21 @@ const nameSearch = <HTMLInputElement> document.getElementById("name-search");
 
 // load table on dom load
 document.addEventListener("DOMContentLoaded", async () => {
-    await PageAccessAuth.AdminAuth();
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)) return;
+    if(!await new AuthService().pageAccessAuth(token!)){
+        window.location.href = "401.html"
+        return;
+    };
     await updateTable() 
     Toast.show({message: "Welcome Admin", type: "ok"});
 });
 
 document.addEventListener("click", async (e) => {
     const target = <HTMLElement> e.target;
-
     const button = target.closest("button");
-
     if (!button) return;
-
-    
 });
 
 document.addEventListener("click", async (e) => {
@@ -59,22 +59,19 @@ document.addEventListener("click", async (e) => {
     if (!uploadBtn) return;
 
     uploadBtn.disabled = true;
-
     const userContainer = <HTMLDivElement> uploadBtn.closest(".table-row");
-    const id = userContainer.dataset.id;
 
-    const token = localStorage.getItem("token");
+    if (userContainer.dataset.id === undefined){
+        Toast.show({message : "Missing employee detected", type : "error"});
+        return;
+    }
+    const id = parseInt(userContainer.dataset.id);
 
-    const response = await fetch("/upload/employee-id", {
-        method : "POST",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-            "Content-Type" : "application/json"
-        },
-        body : JSON.stringify({
-            id : id
-        })
-    });
+   const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString)
+    if (Tools.isTokenNull(token)) return;
+
+    const response = await service.sendEmployeeViaGmail(token!, id);
 
     if (!response.ok){
         const message = await response.text();
@@ -108,16 +105,16 @@ nameSearch.addEventListener("keydown", async (e) => {
 confirmDeleteBtn.addEventListener("click", async () => {
     confirmDeleteBtn.disabled = true;
 
-    const token = localStorage.getItem("token");
-    const response = await fetch("/delete/employee", {
-        method : "POST",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-            "Content-Type" : "application/json"
-        },
-        body : JSON.stringify({
-            id : currentlySelectedId
-    })});
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString)
+    if (Tools.isTokenNull(token)) return;
+    
+    if (currentlySelectedId === null){
+        Toast.show({message: "Failed to send request - Missing Employee Id Detected", type : "error"});
+        closeModal();
+        return;
+    }
+    const response = await service.deleteEmployee(token!, currentlySelectedId);
 
     closeModal();
 
@@ -139,21 +136,20 @@ confirmDeleteBtn.addEventListener("click", async () => {
 // update user
 confirmUpdateBtn.addEventListener("click", async () => {
     confirmUpdateBtn.disabled = true;
-    const token = localStorage.getItem("token");
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)){
+        closeModal();
+        return;
+    };
 
-    const response = await fetch("/update/employee", {
-        method : "POST",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-            "Content-Type" : "application/json"
-        },
-        body : JSON.stringify({
-            column : updateField.value,
-            value : getUpdateValue(),
-            employeeId : currentlySelectedId
-        })
-    });
+    if (currentlySelectedId === null){
+        Toast.show({message: "Failed to send request - Missing Employee Id Detected", type : "error"});
+        closeModal();
+        return;
+    }
 
+    const response = await service.updateEmployee(token!, updateField.value, getUpdateValue(), currentlySelectedId);
     closeModal();
 
     const responseHandler = new ResponseHandler();
@@ -176,28 +172,20 @@ confirmUpdateBtn.addEventListener("click", async () => {
 document.addEventListener("click", (e) =>{
     const element = <HTMLElement> e.target;
     const button = element.closest("button");
-
     if (!button) return;
-
     const actionButton = button.closest(".delete-btn, .update-btn");
-    if (!actionButton) return;
-
+    if (!actionButton) return
     const userRow = <HTMLDivElement> actionButton.closest(".table-row");
-
     const id = userRow.dataset.id;
-
     if (!id) {
         console.error("Employee row missing id");
         return;
     }
-
     currentlySelectedId = parseInt(id);
-
     if (actionButton!.classList.contains("delete-btn")){
         deleteModal.style.display = "flex";
         return;
     }
-
     if (actionButton!.classList.contains("update-btn")){
         updateModal.style.display = "flex";
         return;
@@ -208,56 +196,40 @@ document.addEventListener("click", (e) =>{
 // close Modal
 document.addEventListener("click", (e) => {
     const element = <HTMLElement> e.target;
-
     if (element.classList.contains("closeModal")){
         closeModal();
     }
 });
 
 
-// methods
+// methods - functions
 function closeModal(){
     deleteModal.style.display = "none";
     updateModal.style.display = "none";
-
     currentlySelectedId = null;
 }
 
 async function updateFilteredTable(field: string, value: string){
     employeeContainer.innerHTML = "";
 
-    if (value == "all") {
+    if (value === "all") {
         await updateTable();
         return;
     }
 
-    const token = localStorage.getItem("token");
-
-    const response = await fetch("/select/filtered-employee", {
-        method : "POST",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-            "Content-Type" : "application/json"
-        },
-        body : JSON.stringify({
-            "column" : field,
-            "value" : value
-    })});
-
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString)
+    if (Tools.isTokenNull(token)) return;
+    const response = await service.selectFilteredEmployee(token!, field, value);
     await tableResponseHandler(response);
 }
 
 async function updateTable(){
     employeeContainer.innerHTML = "";
-
-    const token = localStorage.getItem("token");
-
-    const response = await fetch("/select-all/employee", {
-        method : "GET",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-        }});
-        
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)) return;
+    const response = await service.selectAllEmployee(token!);
     await tableResponseHandler(response);
 }
 
@@ -293,15 +265,12 @@ async function tableResponseHandler(response : Response){
 }
 
 function getUpdateValue(): string {
-
     if (updateField.value === "sex") {
         return updateSex.value;
     }
-
     if (updateField.value === "department") {
         return updateDepartment.value;
     }
-
     return updateValue.value;
 }
 // change input based on currently selected update option

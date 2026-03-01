@@ -1,6 +1,7 @@
 using EmployeeAttendance.Services.Database;
 using EmployeeAttendance.Models.Dto;
 using EmployeeAttendance.Services.Service;
+using EmployeeAttendance.Services.ModelValidation;
 
 
 using System.Text.Json;
@@ -54,13 +55,9 @@ public class Response
             {
                 PropertyNameCaseInsensitive = true
             };
-
             employee = JsonSerializer.Deserialize<EmployeeDto>(rawEmployeeData, options) ?? throw new Exception();
-            tool.ValidateEmployee(employee);
-        } catch (FormatException ex)
-        {
-            Console.WriteLine($"ERROR: {ex}");
-            return Results.UnprocessableEntity(ex.Message);
+            InsertEmployeeValidator validator = new InsertEmployeeValidator();
+            validator.Validate(employee);
         } catch (ArgumentException ex)
         {
             Console.WriteLine($"ERROR: {ex}");
@@ -75,16 +72,9 @@ public class Response
         // check for image content
 
         IFormFile imgFile = form.Files["img"]!; // raw img file
-
-        if (imgFile is null || imgFile.Length == 0)
-        {
-            return Results.UnprocessableEntity("Missing image detected");
-        }
-
+        if (imgFile is null || imgFile.Length == 0) return Results.UnprocessableEntity("Missing image detected");
         bool inserted = false;
-
         // try to insert data to db
-
         // try for five times only to avoid infinite loop
         for (int i = 0; i < 5; i++)
         {
@@ -92,7 +82,6 @@ public class Response
             {
                 employee.Code = Guid.NewGuid().ToString();
                 await db.InsertEmployee(employee);
-
                 inserted = true;
                 break;
             } catch (MySqlException ex) when (ex.Number == 1062 && ex.Message.Contains("unique_code"))
@@ -110,20 +99,17 @@ public class Response
 
         if (!inserted) return Results.InternalServerError("ERROR: Server failed to create unique employee code");
         string imgFilepath = Path.Combine(_resourcesDirPath, $"{employee.Code}.jpeg");
-        await tool.SaveEmployeeJpeg(imgFile, imgFilepath);
-        byte[] qrCode = tool.GenerateQrCode(employee.Code!);
-
-        Byte[] pdfByte = await tool.CreateEmployeeIdPdf(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
-
         try
         {
+            await tool.SaveEmployeeJpeg(imgFile, imgFilepath);
+            byte[] qrCode = tool.GenerateQrCode(employee.Code!);
+            byte[] pdfByte = await tool.CreateEmployeeIdPdf(Path.Combine("id-template", "template.html"), imgFilepath, employee, qrCode);
             await tool.SendIdViaGmail(pdfByte, employee.Name!, employee.Gmail!);
         } catch (Exception ex)
         {
             return Results.InternalServerError(ex);
         }
 
-        // send via gmail
         return Results.Ok();
     }
 
@@ -216,7 +202,8 @@ public class Response
     {
         try
         {
-            tool.ValidateUpdate(update);
+            UpdateEmployeeValidator validator = new UpdateEmployeeValidator();
+            validator.Validate(update);
             int affected = await db.UpdateEmployee(update);
             if (affected == 0)
             {
@@ -246,7 +233,7 @@ public class Response
         }catch (MySqlException ex) when (ex.Number == 1452)
         {
             Console.WriteLine($"ERROR: {ex}");
-            return Results.BadRequest();
+            return Results.UnprocessableEntity("Qr Code does not exist in the database");
         }
          catch (Exception ex)
         {
@@ -276,16 +263,21 @@ public class Response
 
     public async Task<IResult> SelectFilteredEmployee(FilteredEmployeeDto filter, MysqlDb db)
     {
-        if (filter.Column != "name" && filter.Column != "department") return Results.BadRequest();
-        
-        if (filter.Column == "department")
+        FilterEmployeeValidator validator = new FilterEmployeeValidator();
+        try
         {
-            string[] departments = ["it", "finance", "marketing", "customer service", "department manager"];
-            if (!departments.Contains(filter.Value)) return Results.BadRequest();
+            validator.Validate(filter);
+        } catch (ArgumentNullException ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.BadRequest();
+        } catch (ArgumentException ex)
+        {
+            Console.WriteLine($"ERROR: {ex}");
+            return Results.BadRequest();
         }
-
+        
         List<Employee> employees;
-
         try
         {
             employees = await db.SelectFilteredEmployees(filter);
@@ -300,10 +292,7 @@ public class Response
             Console.WriteLine("trigger not found on filter");
             return Results.NotFound();
         }
-        
-
         return Results.Json(employees, statusCode: 200);
-        
     }
 
 }

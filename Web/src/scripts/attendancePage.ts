@@ -1,23 +1,28 @@
 import { ResponseHandler } from "./shared/response";
-import { Attendance } from "./interface/Attendance";
-import { PageAccessAuth } from "./shared/pageAccessAuth";
+import { Attendance } from "./models/Attendance";
+import { AuthService } from "./response-handler/auth";
+import { Token } from "./models/Token";
+import { Tools } from "./services/tools";
+import { CrudResponseHandler } from "./response-handler/crud-ops";
+
 
 const attendanceContainer = <HTMLDivElement> document.getElementById("attendance-container");
+const service = new CrudResponseHandler();
 
 
 document.addEventListener("DOMContentLoaded", async () => {
     attendanceContainer.innerHTML = "";
 
-    await PageAccessAuth.AdminAuth();
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)) return;
+    if(!await new AuthService().pageAccessAuth(token!)){
+        window.location.href = "401.html"
+        return;
+    };
 
-    const token = localStorage.getItem("token");
 
-    const response = await fetch("/select/employee-attendance", {
-        method : "GET",
-        headers : {
-            "Authorization" : `Bearer ${token}`,
-            "Content-Type" : "application/json",
-    }})    
+    const response = await service.selectAllAttendance(token!);
 
     const responseHandler = new ResponseHandler();
     
@@ -25,6 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const message = await response.text();
         console.log(`ERROR: ${message}`);
         responseHandler.responseNotif("Attendance Retrieval", response.status, message);
+        return;
     }
 
     const attendance : Attendance[] = await response.json();

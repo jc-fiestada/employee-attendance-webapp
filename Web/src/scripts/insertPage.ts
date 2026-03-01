@@ -1,6 +1,11 @@
 import { Toast } from "./shared/toast";
 import { ResponseHandler } from "./shared/response";
-import { PageAccessAuth } from "./shared/pageAccessAuth";
+import { AuthService } from "./response-handler/auth";
+import { CrudResponseHandler } from "./response-handler/crud-ops";
+import { Tools } from "./services/tools";
+import { Token } from "./models/Token";
+
+const service = new CrudResponseHandler();
 
 const employeeForm = <HTMLFormElement> document.getElementById("employeeForm");
 const submitBtn = <HTMLButtonElement> document.getElementById("submit-employee-btn");
@@ -16,7 +21,14 @@ const preview = <HTMLDivElement> document.getElementById("photoPreview");
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await PageAccessAuth.AdminAuth();
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)) return;
+
+    if(!await new AuthService().pageAccessAuth(token!)){
+        window.location.href = "401.html"
+        return;
+    };
 });
 
 // sends employee data including image
@@ -48,16 +60,17 @@ employeeForm.addEventListener("submit", async (e) => {
     formData.append("employee", JSON.stringify(payload));
     formData.append("img", image);
 
-    const token = localStorage.getItem("token");
+    const tokenString = localStorage.getItem("token");
+    const token : Token | null = Tools.parseToken(tokenString);
+    if (Tools.isTokenNull(token)) return;
 
-    const response = await fetch("/insert/employee", {
-        method : "POST",
-        headers : {"Authorization" : `Bearer ${token}`},
-        body : formData
-    });
-
+    Toast.show({message : "Data is being sent and processed - please wait...", type : "ok"});
+    const response = await service.insertEmployee(token!, fullNameValue, sexValue, gmailValue, departmentValue, image);
+    if (response === null){
+        Toast.show({message: "Image is missing", type : "error"});
+        return;
+    }
     const responseHandler = new ResponseHandler();
-    
     if (!response.ok) {
         const message = await response.text();
         console.log(`ERROR: ${message}`);
@@ -65,12 +78,6 @@ employeeForm.addEventListener("submit", async (e) => {
         submitBtn.disabled = false;
         return;
     }
-
-    const pdfBlob = await response.blob();
-
-    const pdfUrl = window.URL.createObjectURL(pdfBlob);
-
-    window.open(pdfUrl, "_blank");
 
     Toast.show({message : "Employee ID has been sent", type : "ok"})
     submitBtn.disabled = false;

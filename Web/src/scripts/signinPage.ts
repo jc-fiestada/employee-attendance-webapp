@@ -1,14 +1,15 @@
 import { Toast } from "./shared/toast";
+import { AuthService } from "./response-handler/auth";
+import { Token } from "./models/Token";
 
 const form = <HTMLFormElement> document.getElementById("signinForm");
 const username = <HTMLInputElement> document.getElementById("username");
 const password = <HTMLInputElement> document.getElementById("password");
+const service : AuthService = new AuthService();
 
 
 // ill arrange this later, for now ill just write it here
-interface Token{
-    token : string
-}
+
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -16,14 +17,7 @@ form.addEventListener("submit", async (e) => {
     const usernameValue = username.value;
     const passwordValue = password.value;
 
-    const response = await fetch("/admin/signin", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            username : usernameValue,
-            password : passwordValue
-        })
-    });
+    const response : Response = await service.signIn(usernameValue, passwordValue);
 
     if (response.status === 401){
         Toast.show({message: "Invalid Admin Credentials", type: "error"})
@@ -41,8 +35,10 @@ form.addEventListener("submit", async (e) => {
     }
 
     const data : Token = await response.json();
-    
+    if (data.token === null){
+        Toast.show({message: "Server sent an invalid JWT", type : "error"});
+        return;
+    }
     localStorage.setItem("token", data.token);
-
     window.location.href = "./main.html";
 });

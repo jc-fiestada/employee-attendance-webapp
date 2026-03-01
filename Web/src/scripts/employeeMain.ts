@@ -1,6 +1,9 @@
 import { Toast } from "./shared/toast";
 import { ResponseHandler } from "./shared/response";
 import QrScanner from "qr-scanner";
+import { CrudResponseHandler } from "./response-handler/crud-ops";
+
+const service = new CrudResponseHandler();
 
 let qrCode : string | null = null;
 
@@ -13,20 +16,8 @@ const scanner = new QrScanner(
         console.log(`Code: ${result}`);
         if (result === qrCode) return;
         qrCode = result;
-
-        const token = localStorage.getItem("token")
         
-        const response = await fetch("/record/employee-attendance", {
-            method : "POST",
-            headers : {
-                "Authorization" : `Bearer ${token}`,
-                "Content-Type" : "application/json"
-            },
-            body : JSON.stringify({
-                code : result
-            })
-        });
-
+        const response = await service.insertAttendance(qrCode);
         const responseHandler = new ResponseHandler();
 
         if (!response.ok) {
@@ -34,6 +25,7 @@ const scanner = new QrScanner(
             const message = await response.text()
             console.log(`ERROR: ${message}`);
             responseHandler.responseNotif("Attendance", response.status, message);
+            return;
         }
         
         Toast.show(({message: "Attendance Recorded", type: "ok"}));
